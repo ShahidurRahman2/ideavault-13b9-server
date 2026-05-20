@@ -4,6 +4,7 @@
 
 const express = require('express');
 const dotenv = require('dotenv');
+const cors = require('cors');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 // dotenv 
@@ -15,6 +16,7 @@ const PORT = process.env.PORT || 5000;
 const uri = process.env.MONGODB_URI;
 
 // Middleware (app toirer por dea lage)
+app.use(cors());
 app.use(express.json());
 
 // MongoDB Client create
@@ -31,25 +33,39 @@ async function run() {
         // daatabase connect kora
         await client.connect();
 
-
         const database = client.db("ideaVaultDB");
+        const ideasCollection = database.collection("ideas");
         const bannersCollection = database.collection("banners");
 
-        // banner api route holo
+        //    banner api root
         app.get("/banners", async (req, res) => {
             try {
+
                 const result = await bannersCollection
-                    .aggregate([
-                        {
-                            $limit: 3
-                        }
-                    ])
+                    .find({})
+                    .sort({ _id: 1 })
+                    .limit(5)
                     .toArray();
+
                 res.send(result);
             } catch (error) {
                 res.status(500).send({ message: "Data fetch problem", error });
             }
         });
+
+
+        //  ideas rout 
+
+        app.get("/trending-ideas", async (req, res) => {
+
+            const result = await ideasCollection
+                .find()
+                .limit(6)
+                .toArray();
+
+            res.send(result);
+        });
+
 
 
 
@@ -67,7 +83,6 @@ async function run() {
     } catch (error) {
         console.error("Database connection error:", error);
     }
-
 }
 
 // database funstion run kora
