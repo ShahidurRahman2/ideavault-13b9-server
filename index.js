@@ -29,10 +29,16 @@ const client = new MongoClient(uri, {
     }
 });
 
+
+app.get('/', (req, res) => {
+    res.send("server is running fine!");
+});
+
 async function run() {
     try {
         // daatabase connect kora
         await client.connect();
+        console.log("Connected to MongoDB successfully!");
 
         const database = client.db("ideaVaultDB");
         const ideasCollection = database.collection("ideas");
@@ -55,14 +61,16 @@ async function run() {
 
         // ideas rout 
         app.get("/trending-ideas", async (req, res) => {
-            const result = await ideasCollection
-                .find()
-                .limit(6)
-                .toArray();
-
-            res.send(result);
+            try {
+                const result = await ideasCollection
+                    .find()
+                    .limit(6)
+                    .toArray();
+                res.send(result);
+            } catch (error) {
+                res.status(500).send({ message: "Error fetching trending ideas", error });
+            }
         });
-
 
         app.get("/ideas", async (req, res) => {
             try {
@@ -71,7 +79,7 @@ async function run() {
 
                 let andConditions = [];
 
-                //  search 
+                // search 
                 if (search) {
                     andConditions.push({
                         title: { $regex: search, $options: "i" }
@@ -91,12 +99,11 @@ async function run() {
                     });
                 }
 
-                // কুয়েরি অবজেক্ট তৈরি
+
                 let query = {};
                 if (andConditions.length > 0) {
                     query = { $and: andConditions };
                 }
-
 
                 const result = await ideasCollection
                     .find(query)
@@ -110,10 +117,6 @@ async function run() {
                 res.status(500).send({ message: "Error fetching ideas", error });
             }
         });
-
-
-
-
 
         // id dea route id
         app.get("/ideas/:id", async (req, res) => {
@@ -141,24 +144,20 @@ async function run() {
             }
         });
 
-        // root api ata
-        app.get('/', (req, res) => {
-            res.send("server is running fine!");
-        });
-
-        // check korlam connect hoise bole
+        // check korlam connect hoise kimbna
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
+        // 💡 ডাটাবেজ ও রাউট সম্পূর্ণ রেডি হওয়ার পর সার্ভার লিসেন করা শুরু করবে
+        app.listen(PORT, () => {
+            console.log(`🚀 server running on port ${PORT}`);
+        });
+
     } catch (error) {
-        console.error("Database connection error:", error);
+        console.error("Database connection error during startup:", error);
+        process.exit(1);
     }
 }
 
-// database funstion run kora
+// database function run kora
 run().catch(console.dir);
-
-// server
-app.listen(PORT, () => {
-    console.log(`server running on port ${PORT}`);
-});
