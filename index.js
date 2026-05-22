@@ -59,6 +59,27 @@ async function run() {
             }
         });
 
+        //  POST API to save idea from frontend form
+
+        app.post("/ideas", async (req, res) => {
+            try {
+                const newIdea = req.body;
+
+
+                if (!newIdea.title || !newIdea.description) {
+                    return res.status(400).send({ message: "Title and description are required" });
+                }
+
+                // collection
+                const result = await ideasCollection.insertOne(newIdea);
+                res.status(201).send(result);
+            } catch (error) {
+                console.error("Error inserting new idea:", error);
+                res.status(500).send({ message: "Failed to store idea data", error });
+            }
+        });
+        // ========================================================
+
         // ideas rout 
         app.get("/trending-ideas", async (req, res) => {
             try {
@@ -144,11 +165,47 @@ async function run() {
             }
         });
 
+
+        // get specific user data 
+
+        app.get("/my-ideas", async (req, res) => {
+
+            try {
+
+                const email = req.query.email;
+
+                const query = {
+                    userEmail: email
+                };
+
+                const result = await ideasCollection
+                    .find(query)
+                    .sort({ _id: -1 })
+                    .toArray();
+
+                res.send(result);
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                res.status(500).send({
+                    message: "Failed to fetch my ideas"
+                });
+            }
+        });
+
+
+
+
+
         // check korlam connect hoise kimbna
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-        // 💡 ডাটাবেজ ও রাউট সম্পূর্ণ রেডি হওয়ার পর সার্ভার লিসেন করা শুরু করবে
+        // 💡database ready howar jonno
         app.listen(PORT, () => {
             console.log(`🚀 server running on port ${PORT}`);
         });
