@@ -80,7 +80,7 @@ async function run() {
         });
         // ========================================================
 
-        // ideas rout 
+        // ideas trending route 
         app.get("/trending-ideas", async (req, res) => {
             try {
                 const result = await ideasCollection
@@ -198,10 +198,94 @@ async function run() {
         });
 
 
+        // delete data from database by id
+
+        app.delete("/ideas/:id", async (req, res) => {
+
+            try {
+
+                const id = req.params.id;
+
+                const query = {
+                    _id: new ObjectId(id)
+                };
+
+                const result = await ideasCollection.deleteOne(query);
+
+                res.send(result);
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                res.status(500).send({
+                    message: "Failed to delete idea"
+                });
+            }
+        });
+
+
+        //          add comment in the mongodb
+        app.post("/comments", async (req, res) => {
+
+            try {
+
+                const commentData = req.body;
+
+                const result = await commentsCollection.insertOne(commentData);
+
+                res.send(result);
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                res.status(500).send({
+                    message: "Failed to add comment"
+                });
+            }
+        });
+
+
+
+
+        //            comment get from mongodb
+        app.get("/my-interactions", async (req, res) => {
+
+            try {
+
+                const email = req.query.email;
+
+                const result = await commentsCollection
+                    .find({
+                        userEmail: email
+                    })
+                    .sort({ _id: -1 })
+                    .toArray();
+
+                res.send(result);
+
+            }
+
+            catch (error) {
+
+                console.error(error);
+
+                res.status(500).send({
+                    message: "Failed to fetch interactions"
+                });
+            }
+        });
+
 
 
 
         // check korlam connect hoise kimbna
+
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
