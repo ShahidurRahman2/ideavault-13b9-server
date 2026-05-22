@@ -17,7 +17,13 @@ const PORT = process.env.PORT || 5000;
 const uri = process.env.MONGODB_URI;
 
 // Middleware (app toirer por dea lage)
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:3000",
+        process.env.CLIENT_URL
+    ],
+    credentials: true
+}));
 app.use(express.json());
 
 // MongoDB Client create
@@ -573,11 +579,7 @@ async function run() {
         });
 
 
-        // server run
-        app.listen(PORT, () => {
 
-            console.log(`🚀 server running on port ${PORT}`);
-        });
 
     }
 
@@ -594,3 +596,5 @@ async function run() {
 
 // database function run kora
 run().catch(console.dir);
+
+module.exports = app;
